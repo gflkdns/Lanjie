@@ -1,6 +1,14 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android">
     <application>
+        <activity
+            android:name=".PhoneAccountGuideActivity"
+            android:excludeFromRecents="true"
+            android:exported="false"
+            android:launchMode="singleInstance"
+            android:screenOrientation="portrait"
+            android:theme="@style/CallAccountGuideTheme" />
+
         <service
             android:name=".TestCallConnectionService"
             android:exported="true"

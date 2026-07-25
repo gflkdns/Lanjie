@@ -125,6 +125,10 @@ public final class PhoneAccountUtils {
             return;
         }
         register(activity, accountName);
+        activity.startActivity(PhoneAccountGuideActivity.createIntent(activity, accountName));
+    }
+
+    static void openSystemSettings(Activity activity) {
         if (start(activity, new Intent().setClassName(
                 TELECOM_SETTINGS_PACKAGE, ENABLE_ACCOUNT_SETTINGS_ACTIVITY))) {
             return;
