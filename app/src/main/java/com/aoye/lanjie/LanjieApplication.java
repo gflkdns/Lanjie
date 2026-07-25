@@ -2,14 +2,12 @@ package com.aoye.lanjie;
 
 import android.app.Application;
 
+import com.aoye.callaccount.PhoneAccountUtils;
+
 public class LanjieApplication extends Application {
     @Override
     public void onCreate() {
         super.onCreate();
-        registerTestAccount();
-    }
-
-    private void registerTestAccount() {
-        MainActivity.registerTestAccount(this);
+        PhoneAccountUtils.register(this, getString(R.string.call_account_name));
     }
 }

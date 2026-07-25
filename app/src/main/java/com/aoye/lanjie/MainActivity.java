@@ -1,23 +1,15 @@
 package com.aoye.lanjie;
 
 import android.app.Activity;
-import android.content.ActivityNotFoundException;
 import android.content.BroadcastReceiver;
-import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.IntentFilter;
-import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.os.Handler;
 import android.os.Looper;
-import android.provider.Settings;
-import android.telecom.PhoneAccount;
-import android.telecom.PhoneAccountHandle;
-import android.telecom.TelecomManager;
 import android.text.InputType;
-import android.util.Log;
 import android.view.Gravity;
 import android.view.ViewGroup;
 import android.view.Window;
@@ -30,26 +22,13 @@ import android.widget.TextView;
 import java.text.DateFormat;
 import java.util.Date;
 
+import com.aoye.callaccount.PhoneAccountUtils;
+
 public class MainActivity extends Activity {
-    static final String EXTRA_NUMBER = "number";
-    static final String EXTRA_TIME = "time";
-    static final String EXTRA_TEST_MODE = "test_mode";
-    static final String ACTION_TEST_ACCOUNT_CHECK_RESULT =
-            "com.aoye.lanjie.TEST_ACCOUNT_CHECK_RESULT";
-    static final String EXTRA_TEST_ACCOUNT_CHECK_SUCCESS = "test_account_check_success";
-    static final String TEST_MODE_CHECK = "check";
-    static final String TEST_MODE_BLOCK = "block";
-    static final String TEST_MODE_RINGING = "ringing";
-    private static final String TEST_CONNECTION_SERVICE = "com.aoye.lanjie.TestCallConnectionService";
-    private static final String TEST_ACCOUNT_ID = "lanjie-test-account";
-    private static final String TAG = "LanjieTestCall";
     private static final String CHECK_NUMBER = "00000000000";
     private static final String DEFAULT_TEST_NUMBER = "13581918888";
     private static final long ACCOUNT_CHECK_TIMEOUT_MS = 3000L;
     private static final long BACKGROUND_BLOCK_REQUEST_DELAY_MS = 2000L;
-    private static final String TELECOM_SETTINGS_PACKAGE = "com.android.server.telecom";
-    private static final String ENABLE_ACCOUNT_SETTINGS_ACTIVITY =
-            "com.android.server.telecom.settings.EnableAccountPreferenceActivity";
     private boolean waitingForAccountCheck;
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable accountCheckTimeoutRunnable = () -> {
@@ -60,10 +39,11 @@ public class MainActivity extends Activity {
     private final BroadcastReceiver accountCheckReceiver = new BroadcastReceiver() {
         @Override
         public void onReceive(Context context, Intent intent) {
-            if (!ACTION_TEST_ACCOUNT_CHECK_RESULT.equals(intent.getAction())) {
+            if (!PhoneAccountUtils.ACTION_ACCOUNT_CHECK_RESULT.equals(intent.getAction())) {
                 return;
             }
-            boolean success = intent.getBooleanExtra(EXTRA_TEST_ACCOUNT_CHECK_SUCCESS, false);
+            boolean success = intent.getBooleanExtra(
+                    PhoneAccountUtils.EXTRA_ACCOUNT_CHECK_SUCCESS, false);
             finishAccountRequestCheck(success,
                     success ? "来电账号状态: 已启用" : "来电账号状态: 未启用");
         }
@@ -87,7 +67,7 @@ public class MainActivity extends Activity {
     @Override
     protected void onResume() {
         super.onResume();
-        IntentFilter filter = new IntentFilter(ACTION_TEST_ACCOUNT_CHECK_RESULT);
+        IntentFilter filter = new IntentFilter(PhoneAccountUtils.ACTION_ACCOUNT_CHECK_RESULT);
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             registerReceiver(accountCheckReceiver, filter, Context.RECEIVER_NOT_EXPORTED);
         } else {
@@ -108,7 +88,7 @@ public class MainActivity extends Activity {
     }
 
     private void buildUi() {
-        if (getIntent().hasExtra(EXTRA_NUMBER)) {
+        if (getIntent().hasExtra(PhoneAccountUtils.EXTRA_NUMBER)) {
             showCallUi();
             return;
         }
@@ -178,7 +158,8 @@ public class MainActivity extends Activity {
 
         Button ringingCallButton = new Button(this);
         ringingCallButton.setText("模拟系统来电页面");
-        ringingCallButton.setOnClickListener(v -> requestTestIncomingCall(TEST_MODE_RINGING));
+        ringingCallButton.setOnClickListener(
+                v -> requestTestIncomingCall(PhoneAccountUtils.MODE_RINGING));
         LinearLayout.LayoutParams ringingParams = new LinearLayout.LayoutParams(
                 ViewGroup.LayoutParams.MATCH_PARENT,
                 ViewGroup.LayoutParams.WRAP_CONTENT);
@@ -194,11 +175,12 @@ public class MainActivity extends Activity {
                 | WindowManager.LayoutParams.FLAG_TURN_SCREEN_ON
                 | WindowManager.LayoutParams.FLAG_KEEP_SCREEN_ON);
 
-        String number = getIntent().getStringExtra(EXTRA_NUMBER);
+        String number = getIntent().getStringExtra(PhoneAccountUtils.EXTRA_NUMBER);
         if (number == null || number.isEmpty()) {
             number = "未知号码";
         }
-        long timeMillis = getIntent().getLongExtra(EXTRA_TIME, System.currentTimeMillis());
+        long timeMillis = getIntent().getLongExtra(
+                PhoneAccountUtils.EXTRA_TIME, System.currentTimeMillis());
 
         int padding = dp(28);
         LinearLayout root = new LinearLayout(this);
@@ -240,61 +222,10 @@ public class MainActivity extends Activity {
     }
 
     private void openPhoneAccountSettings() {
-        if (isTestAccountEnabled()) {
-            return;
-        }
-        registerTestAccount();
-        Intent enableAccountIntent = new Intent()
-                .setClassName(TELECOM_SETTINGS_PACKAGE, ENABLE_ACCOUNT_SETTINGS_ACTIVITY);
-        try {
-            startActivity(enableAccountIntent);
-            return;
-        } catch (ActivityNotFoundException ignored) {
-            // Fall back below.
-        }
-
-        Intent phoneAccountsIntent = new Intent(TelecomManager.ACTION_CHANGE_PHONE_ACCOUNTS);
-        try {
-            startActivity(phoneAccountsIntent);
-            return;
-        } catch (ActivityNotFoundException ignored) {
-            // Fall back below.
-        }
-
-        try {
-            startActivity(new Intent(TelecomManager.ACTION_SHOW_CALL_SETTINGS));
-        } catch (ActivityNotFoundException ignored) {
-            startActivity(new Intent(Settings.ACTION_SETTINGS));
-        }
-    }
-
-    private void registerTestAccount() {
-        registerTestAccount(this);
-    }
-
-    static void registerTestAccount(Context context) {
-        TelecomManager telecomManager = context.getSystemService(TelecomManager.class);
-        if (telecomManager == null) {
-            Log.w(TAG, "TelecomManager unavailable");
-            return;
-        }
-        PhoneAccountHandle handle = testAccountHandle(context);
-        try {
-            if (telecomManager.getPhoneAccount(handle) != null) {
-                return;
-            }
-        } catch (RuntimeException e) {
-            Log.w(TAG, "Unable to read test phone account before registering", e);
-        }
-        PhoneAccount account = new PhoneAccount.Builder(handle, "拦截骚扰电话")
-                .setCapabilities(PhoneAccount.CAPABILITY_CALL_PROVIDER)
-                .addSupportedUriScheme(PhoneAccount.SCHEME_TEL)
-                .build();
-        telecomManager.registerPhoneAccount(account);
+        PhoneAccountUtils.openSettings(this, accountName());
     }
 
     private void requestTestIncomingCall(String mode) {
-        registerTestAccount();
         String number = numberInput == null ? "" : numberInput.getText().toString().trim();
         if (number.isEmpty()) {
             number = DEFAULT_TEST_NUMBER;
@@ -303,7 +234,6 @@ public class MainActivity extends Activity {
     }
 
     private void requestBlockedCallFromBackground() {
-        registerTestAccount();
         String number = numberInput == null ? "" : numberInput.getText().toString().trim();
         if (number.isEmpty()) {
             number = DEFAULT_TEST_NUMBER;
@@ -314,53 +244,22 @@ public class MainActivity extends Activity {
         }
         moveTaskToBack(true);
         handler.postDelayed(
-                () -> requestTestIncomingCall(this, requestedNumber, TEST_MODE_BLOCK),
+                () -> PhoneAccountUtils.requestIncomingCall(
+                        this, accountName(), requestedNumber, PhoneAccountUtils.MODE_BLOCK),
                 BACKGROUND_BLOCK_REQUEST_DELAY_MS);
     }
 
-    static boolean requestTestIncomingCall(Context context, String number, String mode) {
-        TelecomManager telecomManager = context.getSystemService(TelecomManager.class);
-        if (telecomManager == null) {
-            Log.w(TAG, "TelecomManager unavailable");
-            return false;
-        }
-        Uri address = Uri.fromParts(PhoneAccount.SCHEME_TEL, number, null);
-        Bundle extras = new Bundle();
-        extras.putParcelable(TelecomManager.EXTRA_INCOMING_CALL_ADDRESS, address);
-        extras.putString(EXTRA_TEST_MODE, mode);
-        try {
-            telecomManager.addNewIncomingCall(testAccountHandle(context), extras);
-            return true;
-        } catch (RuntimeException e) {
-            Log.e(TAG, "Unable to request test incoming call", e);
-            return false;
-        }
-    }
-
-    private boolean isTestAccountEnabled() {
-        TelecomManager telecomManager = getSystemService(TelecomManager.class);
-        if (telecomManager == null) {
-            return false;
-        }
-        try {
-            PhoneAccount account = telecomManager.getPhoneAccount(testAccountHandle(this));
-            return account != null && account.isEnabled();
-        } catch (RuntimeException ignored) {
-            return false;
-        }
-    }
-
-    private static PhoneAccountHandle testAccountHandle(Context context) {
-        return new PhoneAccountHandle(
-                new ComponentName(context.getPackageName(), TEST_CONNECTION_SERVICE),
-                TEST_ACCOUNT_ID);
+    private static boolean requestTestIncomingCall(
+            Context context, String number, String mode) {
+        return PhoneAccountUtils.requestIncomingCall(
+                context, context.getString(R.string.call_account_name), number, mode);
     }
 
     private void updateAccountStatus() {
         if (accountStatusView == null) {
             return;
         }
-        registerTestAccount();
+        PhoneAccountUtils.register(this, accountName());
         accountStatusView.setText("来电账号状态: 点击检查");
     }
 
@@ -369,9 +268,9 @@ public class MainActivity extends Activity {
             accountStatusView.setText("来电账号状态: 正在发送检查请求...");
         }
         waitingForAccountCheck = true;
-        registerTestAccount();
+        PhoneAccountUtils.register(this, accountName());
         boolean requestStarted = requestTestIncomingCall(
-                this, CHECK_NUMBER, TEST_MODE_CHECK);
+                this, CHECK_NUMBER, PhoneAccountUtils.MODE_CHECK);
         if (!requestStarted) {
             finishAccountRequestCheck(false, "来电账号状态: 未启用");
             return;
@@ -386,6 +285,10 @@ public class MainActivity extends Activity {
         if (accountStatusView != null) {
             accountStatusView.setText(statusText);
         }
+    }
+
+    private String accountName() {
+        return getString(R.string.call_account_name);
     }
 
     private int dp(int value) {

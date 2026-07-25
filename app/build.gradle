@@ -2,6 +2,10 @@ plugins {
     id 'com.android.application'
 }
 
+dependencies {
+    implementation project(':call-account')
+}
+
 android {
     namespace 'com.aoye.lanjie'
     compileSdk 35
