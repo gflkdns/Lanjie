@@ -15,8 +15,6 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.util.Log;
 
-import java.util.Locale;
-
 public class TestCallConnectionService extends ConnectionService {
     private static final String TAG = "CallAccount";
     private static final String DEFAULT_TEST_NUMBER = "13581918888";
@@ -151,16 +149,6 @@ public class TestCallConnectionService extends ConnectionService {
     }
 
     private static int selectAnnouncementResource() {
-        String language = Locale.getDefault().getLanguage();
-        if (Locale.CHINESE.getLanguage().equals(language)) {
-            return R.raw.announcement_zh_cn;
-        }
-        if (Locale.JAPANESE.getLanguage().equals(language)) {
-            return R.raw.announcement_ja_jp;
-        }
-        if (Locale.KOREAN.getLanguage().equals(language)) {
-            return R.raw.announcement_ko_kr;
-        }
         return R.raw.announcement_en_us;
     }
 

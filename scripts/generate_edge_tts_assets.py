@@ -5,7 +5,7 @@ import edge_tts
 
 
 ROOT = Path(__file__).resolve().parents[1]
-RAW_DIR = ROOT / "app" / "src" / "main" / "res" / "raw"
+RAW_DIR = ROOT / "call-account" / "src" / "main" / "res" / "raw"
 
 ANNOUNCEMENTS = [
     (
@@ -26,7 +26,7 @@ ANNOUNCEMENTS = [
     (
         "announcement_en_us.mp3",
         "en-US-JennyNeural",
-        "Warning, warning. You just received an overseas scam call. We have automatically blocked it for you. Open Call block to view the blocking details.",
+        "Warning, warning. You just received an overseas scam call. We have automatically blocked it for you. Open Call block to view the blocking details. You can now safely hang up the phone. Thank you for using Call block.",
     ),
 ]
 

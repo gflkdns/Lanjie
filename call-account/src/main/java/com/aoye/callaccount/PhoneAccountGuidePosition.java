@@ -12,9 +12,31 @@ final class PhoneAccountGuidePosition {
     }
 
     static Rect calculate(int screenWidth, int statusBarInset, float density) {
-        int horizontalInset = Math.round(HORIZONTAL_INSET_DP * density);
-        int top = statusBarInset + Math.round(ACTION_BAR_HEIGHT_DP * density);
-        int bottom = top + Math.round(ACCOUNT_ROW_HEIGHT_DP * density);
+        return calculate(
+                screenWidth,
+                statusBarInset,
+                density,
+                HORIZONTAL_INSET_DP,
+                ACTION_BAR_HEIGHT_DP,
+                ACCOUNT_ROW_HEIGHT_DP);
+    }
+
+    static Rect calculate(int screenWidth, int statusBarInset, float density,
+            float horizontalInsetDp, float actionBarHeightDp, float accountRowHeightDp) {
+        return calculateWithRowHeightPx(
+                screenWidth,
+                statusBarInset,
+                density,
+                horizontalInsetDp,
+                actionBarHeightDp,
+                Math.round(accountRowHeightDp * density));
+    }
+
+    static Rect calculateWithRowHeightPx(int screenWidth, int statusBarInset, float density,
+            float horizontalInsetDp, float actionBarHeightDp, int accountRowHeightPx) {
+        int horizontalInset = Math.round(horizontalInsetDp * density);
+        int top = statusBarInset + Math.round(actionBarHeightDp * density);
+        int bottom = top + accountRowHeightPx;
         return new Rect(horizontalInset, top, screenWidth - horizontalInset, bottom);
     }
 }
