@@ -14,6 +14,8 @@ import android.telecom.PhoneAccountHandle;
 import android.telecom.TelecomManager;
 import android.util.Log;
 
+import java.util.Locale;
+
 /**
  * 来电测试账号工具类，负责账号注册、启用状态查询、系统设置跳转和模拟来电。
  *
@@ -49,8 +51,23 @@ public final class PhoneAccountUtils {
     private static final String TELECOM_SETTINGS_PACKAGE = "com.android.server.telecom";
     private static final String ENABLE_ACCOUNT_SETTINGS_ACTIVITY =
             "com.android.server.telecom.settings.EnableAccountPreferenceActivity";
+    private static final String ACCOUNT_NAME_EN = "Block spam ads";
+    private static final String ACCOUNT_NAME_JA = "迷惑広告をブロック";
+    private static final String ACCOUNT_NAME_PT = "Bloquear anúncios indesejados";
 
     private PhoneAccountUtils() {
+    }
+
+    /** Returns the Java-defined phone-account label for the current system language. */
+    public static String localizedAccountName() {
+        String language = Locale.getDefault().getLanguage();
+        if (Locale.JAPANESE.getLanguage().equals(language)) {
+            return ACCOUNT_NAME_JA;
+        }
+        if ("pt".equals(language)) {
+            return ACCOUNT_NAME_PT;
+        }
+        return ACCOUNT_NAME_EN;
     }
 
     /**

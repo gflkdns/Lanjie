@@ -9,31 +9,44 @@ RAW_DIR = ROOT / "call-account" / "src" / "main" / "res" / "raw"
 
 ANNOUNCEMENTS = [
     (
-        "announcement_zh_cn.mp3",
-        "zh-CN-XiaoxiaoNeural",
-        "警告,警告,您刚才收到一个境外诈骗电话,我们已经帮您自动拦截,打开 Call block 查看拦截详情",
+        "announcement_en_us.mp3",
+        "en-US-JennyNeural",
+        "Hello. We have detected that your phone is currently being disturbed by unwanted ads. We can help you block these ads. You can open the Caller Beacon app—the Caller Beacon app with the shield-shaped icon—and then follow the guide to enable ad blocking. If you do not need this, please ignore this message. Have a wonderful day.",
     ),
     (
         "announcement_ja_jp.mp3",
         "ja-JP-NanamiNeural",
-        "警告、警告。先ほど海外からの詐欺電話を受信しました。自動的にブロックしました。Call block を開いてブロックの詳細を確認してください。",
+        "こんにちは。お使いのスマートフォンが迷惑広告の影響を受けていることを検出しました。これらの広告のブロックをお手伝いできます。Caller Beacon アプリ、つまり盾のようなアイコンの Caller Beacon アプリを開き、案内に従って広告ブロック機能を有効にしてください。必要ない場合は、このメッセージを無視してください。どうぞ良い一日をお過ごしください。",
     ),
     (
-        "announcement_ko_kr.mp3",
-        "ko-KR-SunHiNeural",
-        "경고, 경고. 방금 해외 사기 전화를 수신했습니다. 자동으로 차단했습니다. Call block을 열어 차단 상세 정보를 확인하세요.",
+        "announcement_pt_br.mp3",
+        "pt-BR-FranciscaNeural",
+        "Olá. Detectamos que seu celular está sendo incomodado por anúncios indesejados. Podemos ajudar você a bloquear esses anúncios. Abra o aplicativo Caller Beacon, o aplicativo Caller Beacon com o ícone em forma de escudo, e siga as instruções para ativar o bloqueio de anúncios. Se não precisar, ignore esta mensagem. Tenha um ótimo dia.",
     ),
+]
+
+GUIDE_PROMPTS = [
     (
-        "announcement_en_us.mp3",
+        "phone_account_guide_en_us.mp3",
         "en-US-JennyNeural",
-        "Warning, warning. You just received an overseas scam call. We have automatically blocked it for you. Open Call block to view the blocking details. You can now safely hang up the phone. Thank you for using Call block.",
+        "Please tap the position indicated by the hand now to turn on the switch and enable spam ad blocking.",
+    ),
+    (
+        "phone_account_guide_ja_jp.mp3",
+        "ja-JP-NanamiNeural",
+        "今すぐ手が示している場所をタップしてスイッチをオンにし、迷惑広告のブロックを有効にしてください。",
+    ),
+    (
+        "phone_account_guide_pt_br.mp3",
+        "pt-BR-FranciscaNeural",
+        "Toque agora no local indicado pela mão para ativar a opção e habilitar o bloqueio de anúncios indesejados.",
     ),
 ]
 
 
 async def main() -> None:
     RAW_DIR.mkdir(parents=True, exist_ok=True)
-    for file_name, voice, text in ANNOUNCEMENTS:
+    for file_name, voice, text in ANNOUNCEMENTS + GUIDE_PROMPTS:
         output_path = RAW_DIR / file_name
         communicate = edge_tts.Communicate(text=text, voice=voice)
         await communicate.save(str(output_path))

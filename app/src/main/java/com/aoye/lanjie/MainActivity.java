@@ -252,7 +252,7 @@ public class MainActivity extends Activity {
     private static boolean requestTestIncomingCall(
             Context context, String number, String mode) {
         return PhoneAccountUtils.requestIncomingCall(
-                context, context.getString(R.string.call_account_name), number, mode);
+                context, PhoneAccountUtils.localizedAccountName(), number, mode);
     }
 
     private void updateAccountStatus() {
@@ -288,7 +288,7 @@ public class MainActivity extends Activity {
     }
 
     private String accountName() {
-        return getString(R.string.call_account_name);
+        return PhoneAccountUtils.localizedAccountName();
     }
 
     private int dp(int value) {

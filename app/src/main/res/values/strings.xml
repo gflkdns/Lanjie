@@ -1,5 +1,4 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name">拦截助手</string>
-    <string name="call_account_name">拦截骚扰电话</string>
 </resources>
