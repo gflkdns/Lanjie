@@ -34,20 +34,30 @@ public final class PhoneAccountGuideActivity extends Activity {
     private static final GuideDeviceConfig SAMSUNG_GUIDE_CONFIG =
             new GuideDeviceConfig(
                     "samsung", -110f, 0.90f, 0.10f, -7f,
-                    12f, 80f, 56f, 0f, 36f, true);
+                    12f, 80f, 56f, 0f, 0f, 0, 36f, true);
     private static final GuideDeviceConfig XIAOMI_GUIDE_CONFIG =
             // HyperOS 3 row bounds match these dp values at 420/480/520/560 dpi.
             new GuideDeviceConfig(
                     "xiaomi", -45f, 0.72f, 0.08f, 7f,
-                    0f, 56f, 53.5f, 0f, 36f, false);
+                    0f, 56f, 53.5f, 0f, 0f, 0, 36f, false);
     private static final GuideDeviceConfig OPPO_GUIDE_CONFIG =
             new GuideDeviceConfig(
                     "oppo", -45f, 0.72f, 0.08f, 7f,
-                    0f, 56f, 53.5f, 0f, 36f, false);
+                    0f, 56f, 53.5f, 0f, 0f, 0, 36f, false);
     private static final GuideDeviceConfig VIVO_GUIDE_CONFIG =
             new GuideDeviceConfig(
                     "vivo", -45f, 0.72f, 0.08f, 7f,
-                    16f, 60f, 23.5f, 15f, 50f, false);
+                    16f, 60f, 23.5f, 15f, 0f, 0, 50f, false);
+    private static final GuideDeviceConfig GOOGLE_GUIDE_CONFIG =
+            // Pixel 5 / AOSP Android 14 verified at 360/440/480/520/560/600 dpi.
+            new GuideDeviceConfig(
+                    "google", -45f, 0.72f, 0.08f, 7f,
+                    0f, 56f, 56f, 0f, 1f, 3, 36f, false);
+    private static final GuideDeviceConfig MOTOROLA_GUIDE_CONFIG =
+            // XT2527-3 / Android 15 verified at 360/450/520 dpi.
+            new GuideDeviceConfig(
+                    "motorola", -45f, 0.72f, 0.08f, 7f,
+                    0f, 56f, 56f, 0f, 0f, 0, 36f, false);
 
     private final Handler handler = new Handler(Looper.getMainLooper());
     private final Runnable backgroundTimeout = () -> {
@@ -288,6 +298,12 @@ public final class PhoneAccountGuideActivity extends Activity {
         if (isVivoDevice()) {
             return VIVO_GUIDE_CONFIG;
         }
+        if (isGoogleDevice()) {
+            return GOOGLE_GUIDE_CONFIG;
+        }
+        if (isMotorolaDevice()) {
+            return MOTOROLA_GUIDE_CONFIG;
+        }
         // Samsung is the verified baseline and remains the fallback for unknown manufacturers.
         return SAMSUNG_GUIDE_CONFIG;
     }
@@ -306,6 +322,16 @@ public final class PhoneAccountGuideActivity extends Activity {
                 || "vivo".equalsIgnoreCase(Build.BRAND);
     }
 
+    private static boolean isGoogleDevice() {
+        return "google".equalsIgnoreCase(Build.MANUFACTURER)
+                || "google".equalsIgnoreCase(Build.BRAND);
+    }
+
+    private static boolean isMotorolaDevice() {
+        return "motorola".equalsIgnoreCase(Build.MANUFACTURER)
+                || "motorola".equalsIgnoreCase(Build.BRAND);
+    }
+
     private static boolean isXiaomiName(String value) {
         return "xiaomi".equalsIgnoreCase(value)
                 || "redmi".equalsIgnoreCase(value)
@@ -322,13 +348,16 @@ public final class PhoneAccountGuideActivity extends Activity {
         final float actionBarHeightDp;
         final float accountRowHeightDp;
         final float accountRowVerticalPaddingDp;
+        final float accountRowExtraDp;
+        final int accountRowExtraMaxPx;
         final float targetRightOffsetDp;
         final boolean animateHighlightScale;
 
         GuideDeviceConfig(String name, float handRotationDegrees, float fingertipXRatio,
                 float fingertipYRatio, float translationXEnd, float horizontalInsetDp,
                 float actionBarHeightDp, float accountRowHeightDp,
-                float accountRowVerticalPaddingDp, float targetRightOffsetDp,
+                float accountRowVerticalPaddingDp, float accountRowExtraDp,
+                int accountRowExtraMaxPx, float targetRightOffsetDp,
                 boolean animateHighlightScale) {
             this.name = name;
             this.handRotationDegrees = handRotationDegrees;
@@ -339,16 +368,25 @@ public final class PhoneAccountGuideActivity extends Activity {
             this.actionBarHeightDp = actionBarHeightDp;
             this.accountRowHeightDp = accountRowHeightDp;
             this.accountRowVerticalPaddingDp = accountRowVerticalPaddingDp;
+            this.accountRowExtraDp = accountRowExtraDp;
+            this.accountRowExtraMaxPx = accountRowExtraMaxPx;
             this.targetRightOffsetDp = targetRightOffsetDp;
             this.animateHighlightScale = animateHighlightScale;
         }
 
         int accountRowHeightPx(float density) {
             int contentHeight = Math.round(accountRowHeightDp * density);
-            if (accountRowVerticalPaddingDp == 0f) {
-                return contentHeight;
+            if (accountRowVerticalPaddingDp != 0f) {
+                contentHeight += 2 * Math.round(accountRowVerticalPaddingDp * density);
             }
-            return contentHeight + 2 * Math.round(accountRowVerticalPaddingDp * density);
+            if (accountRowExtraDp != 0f) {
+                int extraPx = Math.round(accountRowExtraDp * density);
+                if (accountRowExtraMaxPx > 0) {
+                    extraPx = Math.min(accountRowExtraMaxPx, extraPx);
+                }
+                contentHeight += extraPx;
+            }
+            return contentHeight;
         }
     }
 

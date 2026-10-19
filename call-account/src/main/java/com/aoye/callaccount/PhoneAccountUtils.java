@@ -51,9 +51,10 @@ public final class PhoneAccountUtils {
     private static final String TELECOM_SETTINGS_PACKAGE = "com.android.server.telecom";
     private static final String ENABLE_ACCOUNT_SETTINGS_ACTIVITY =
             "com.android.server.telecom.settings.EnableAccountPreferenceActivity";
-    private static final String ACCOUNT_NAME_EN = "Block spam ads";
-    private static final String ACCOUNT_NAME_JA = "迷惑広告をブロック";
-    private static final String ACCOUNT_NAME_PT = "Bloquear anúncios indesejados";
+    private static final String ACCOUNT_NAME_ZH = "屏蔽广告&骚扰电话";
+    private static final String ACCOUNT_NAME_EN = "Block ads & spam calls";
+    private static final String ACCOUNT_NAME_JA = "広告と迷惑電話をブロック";
+    private static final String ACCOUNT_NAME_PT = "Bloquear anúncios e chamadas indesejadas";
 
     private PhoneAccountUtils() {
     }
@@ -61,6 +62,9 @@ public final class PhoneAccountUtils {
     /** Returns the Java-defined phone-account label for the current system language. */
     public static String localizedAccountName() {
         String language = Locale.getDefault().getLanguage();
+        if (Locale.CHINESE.getLanguage().equals(language)) {
+            return ACCOUNT_NAME_ZH;
+        }
         if (Locale.JAPANESE.getLanguage().equals(language)) {
             return ACCOUNT_NAME_JA;
         }
